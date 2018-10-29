@@ -1,0 +1,70 @@
+{{define "login"}}
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>登录SweetFish管理控制台</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="/static/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="/static/bootstrap/css/signin.css" rel="stylesheet">
+
+  </head>
+
+  <body>
+
+    <div class="container">
+
+      <form class="form-signin">
+        <h2 class="form-signin-heading">请登录</h2>
+        <label for="inputEmail">用户名</label>
+        <input type="text" id="inputUsername" class="form-control" required autofocus>
+        <label for="inputPassword">Password</label>
+        <input type="password" id="inputPassword" class="form-control" placeholder="Password" required>
+        <button class="btn btn-lg btn-primary btn-block" type="submit" onclick="do_auth();return false;">登录</button>
+      </form>
+
+    </div> <!-- /container -->
+
+    <script type="text/javascript" src="/static/jquery-3.1.0.min.js"></script>
+
+    <script>
+      function do_auth() {
+        var username = $('#inputUsername').val()
+        var password = $('#inputPassword').val()
+        var request = {
+          username: username,
+          password: password
+        }
+        $.ajax(
+          "/v1/ajax/auth/token",
+          {
+            dataType: 'json',
+            data: JSON.stringify(request),
+            method: 'POST',
+            processdata: false,
+            async: false,
+            error: function(jqXHR, textStatus, errorThrown) {
+              console.log(jqXHR)
+              alert('账户或用户名错误')
+            },
+            success: function(data, textStatus, jqXHR) {
+              window.location.href = '/ht'
+            }
+          }
+        )
+      }
+    </script>
+
+  </body>
+</html>
+{{end}}
