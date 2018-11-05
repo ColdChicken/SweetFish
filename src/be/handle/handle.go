@@ -17,8 +17,8 @@ func InitHandle(r *server.WWWMux) {
 	initAdminPortalMapping(r)
 	// 初始化管理控制台ajax
 	initAjaxMapping(r)
-	// 小程序api相关的接口
-	initAPIMapping(r)
+	// 小程序(tiny program)api相关的接口
+	initTPAPIMapping(r)
 }
 
 func initStaticFileMapping(r *server.WWWMux) {
@@ -42,6 +42,24 @@ func initAjaxMapping(r *server.WWWMux) {
 
 }
 
-func initAPIMapping(r *server.WWWMux) {
+func initTPAPIMapping(r *server.WWWMux) {
+	// 根据用户输入搜索相关项目
+	r.RegistURLMapping("/v1/tp/github/search", "POST", tpapiSearchGithubProject)
+	// 根据用户选择展示项目详情
+	r.RegistURLMapping("/v1/tp/github/projectdetail", "POST", tpapiShowGitHubProjectDetail)
 
+	// 用户选择项目后创建相关项目
+	r.RegistURLMapping("/v1/tp/project/create", "POST", tpapiCreateProject)
+	// 获取项目相关信息
+	r.RegistURLMapping("/v1/tp/project/detail", "POST", tpapiGetProjectDetail)
+	// 列出当前用户的项目列表
+	r.RegistURLMapping("/v1/tp/project/list", "POST", tpapiListProjects)
+	// 用户打开项目
+	r.RegistURLMapping("/v1/tp/project/open", "POST", tpapiOpenProject)
+	// 用户在项目中执行某个操作
+	r.RegistURLMapping("/v1/tp/project/action", "POST", tpapiDoActionInProject)
+	// 用户关闭某个项目
+	r.RegistURLMapping("/v1/tp/project/close", "POST", tpapiCloseProject)
+	// 用户删除某个项目
+	r.RegistURLMapping("/v1/tp/project/delete", "POST", tpapiDeleteProject)
 }
