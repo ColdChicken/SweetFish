@@ -43,6 +43,9 @@ func initAjaxMapping(r *server.WWWMux) {
 }
 
 func initTPAPIMapping(r *server.WWWMux) {
+	// 用户登录
+	r.RegistURLMapping("/v1/tp/auth/login", "POST", tpapiUserLogin)
+
 	// 根据用户输入搜索相关项目
 	r.RegistURLMapping("/v1/tp/github/search", "POST", tpapiSearchGithubProject)
 	// 根据用户选择展示项目详情

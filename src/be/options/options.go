@@ -42,6 +42,10 @@ type WWWOptions struct {
 	DBMaxOpenConn int
 	// MySQL 最大闲置连接数
 	DBMaxIdleConn int
+
+	// 小程序信息
+	TPAppId  string
+	TPSecret string
 }
 
 var Options WWWOptions
@@ -63,6 +67,8 @@ func (o *WWWOptions) InitOptions() {
 	flag.StringVar(&o.CertFile, "cert_file", "./key/server.pem", "CertFile")
 	flag.StringVar(&o.KeyFile, "key_file", "./key/server.key", "KeyFile")
 	flag.BoolVar(&o.EnableTls, "enable_tls", false, "EnableTls")
+	flag.StringVar(&o.TPAppId, "tp_appid", "", "TPAppId")
+	flag.StringVar(&o.TPSecret, "tp_secret", "", "TPSecret")
 
 	iniflags.Parse()
 }

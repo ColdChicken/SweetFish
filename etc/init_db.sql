@@ -11,9 +11,12 @@ CREATE TABLE TOKEN(
   KEY (token)
 ) ENGINE = INNODB;
 
+-- 基于用户名密码的用户信息，兼容openid
 CREATE TABLE USER_AUTH_INFO (
     id INT NOT NULL AUTO_INCREMENT COMMENT 'id',
     username VARCHAR(128) NOT NULL COMMENT '用户名',
     password VARCHAR(1024) NOT NULL COMMENT '密码',
-    PRIMARY KEY (id)
+    PRIMARY KEY (id),
+    UNIQUE KEY(username)
 ) ENGINE = INNODB;
+

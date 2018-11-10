@@ -14,3 +14,4 @@
 .vscode/
 src/fe/node_modules/
 pkg/
+etc/

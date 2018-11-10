@@ -5,24 +5,20 @@ type UserInfo struct {
 	Username string `json:"username"`
 }
 
-// User 用户信息，这个结构体用于实际的用户
-type User struct {
-}
-
 // GitHubProject 一个GitHub项目的基本信息
 type GitHubProject struct {
-	Id int64 `json:"id"`
-	Name string `json:"name"`
-	FullName string `json:"fullName"`
-	HtmlUrl string `json:"htmlUrl"`
-	Description string `json:"description"`
-	CloneUrl string `json:"cloneUrl"`
-	HomePage string `json:"homepage"`
-	Size int64 `json:"size"`
-	Stars int64 `json:"stars"`
-	Watchers int64 `json:"watchers"`
-	Forks int64 `json:"forks"`
-	Language string `json:"language"`
+	Id             int64  `json:"id"`
+	Name           string `json:"name"`
+	FullName       string `json:"fullName"`
+	HtmlUrl        string `json:"htmlUrl"`
+	Description    string `json:"description"`
+	CloneUrl       string `json:"cloneUrl"`
+	HomePage       string `json:"homepage"`
+	Size           int64  `json:"size"`
+	Stars          int64  `json:"stars"`
+	Watchers       int64  `json:"watchers"`
+	Forks          int64  `json:"forks"`
+	Language       string `json:"language"`
 	OwnerLoginName string `json:"ownerLoginName"`
 }
 

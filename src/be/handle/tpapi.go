@@ -11,8 +11,45 @@ import (
 	"net/http"
 )
 
-func tpapiGetRequestUser(req *http.Request) (*structs.User, error) {
-	return nil, nil
+func tpapiGetRequestUser(req *http.Request) (*structs.UserInfo, error) {
+	token := req.Header.Get("token")
+	userinfo, err := model.Auth.GetUserInfoByToken(token)
+	if err != nil {
+		return nil, err
+	}
+	return userinfo, nil
+}
+
+func tpapiUserLogin(res http.ResponseWriter, req *http.Request) {
+	reqContent, err := ioutil.ReadAll(req.Body)
+	defer req.Body.Close()
+	if err != nil {
+		log.WithFields(log.Fields{}).Error("请求报文解析失败")
+		common.ResInvalidRequestBody(res)
+		return
+	}
+
+	type Request struct {
+		Code string `json:"code"`
+	}
+
+	request := &Request{}
+	if err := common.ParseJsonStr(string(reqContent), request); err != nil {
+		log.Errorln("解析模板JSON失败")
+		common.ResMsg(res, 400, xe.HandleRequestError().Error())
+		return
+	}
+
+	result, err := model.Auth.GetTokenByTPCode(request.Code)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"err": err.Error(),
+		}).Error("model请求处理失败")
+		common.ResMsg(res, 400, xe.HandleRequestError().Error())
+		return
+	}
+	common.ResMsg(res, 200, result)
+
 }
 
 func tpapiSearchGithubProject(res http.ResponseWriter, req *http.Request) {
