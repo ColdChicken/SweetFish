@@ -2,23 +2,48 @@ package model
 
 import (
 	"be/common/log"
+	"be/service"
 	"be/structs"
 )
 
-type ProjectMgr struct{}
+type ProjectMgr struct {
+	serviceMgr *service.ServiceMgr
+	projectMgr *service.ProjectMgr
+}
 
 var Project *ProjectMgr
 
 func init() {
-	Project = &ProjectMgr{}
+	serviceMgr := service.NewServiceMgr()
+	projectMgr := service.NewProjectMgr(serviceMgr)
+	Project = &ProjectMgr{
+		serviceMgr: serviceMgr,
+		projectMgr: projectMgr,
+	}
 }
 
 // CreateProject 创建项目
-// 此方法调用后会立刻返回，同时提供跟踪操作结果的查询uuid，该uuid为项目的唯一ID
-// 此方法负责从GitHub上下载相关项目到本地，并进行相关初始化操作。各类动作的结果会同步到库中
-func (m *ProjectMgr) CreateProject(requestUser *structs.UserInfo, projectId string) string {
+// 此方法调用后会立刻返回
+func (m *ProjectMgr) CreateProject(requestUser *structs.UserInfo, projectId string) error {
 	log.Debugf("开始创建项目 %s - %s", requestUser.Username, projectId)
-	return ""
+	// 获取目标主机
+	targetIp, err := m.serviceMgr.ChooseTargetServiceMachine()
+	if err != nil {
+		log.Errorln(err.Error())
+		return err
+	}
+
+	// 创建项目
+	project, err := m.projectMgr.CreateProjectForUser(requestUser.Username, targetIp, projectId)
+	if err != nil {
+		log.Errorln(err.Error())
+		return err
+	}
+
+	// 开始初始化
+	go project.Init()
+
+	return nil
 }
 
 // ListProjects 列出被查询用户的项目基本信息列表

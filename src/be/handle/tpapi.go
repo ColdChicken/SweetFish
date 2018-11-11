@@ -159,9 +159,16 @@ func tpapiCreateProject(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	result := model.Project.CreateProject(requestUser, request.ProjectId)
+	err = model.Project.CreateProject(requestUser, request.ProjectId)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"err": err.Error(),
+		}).Error("model请求处理失败")
+		common.ResMsg(res, 400, xe.HandleRequestError().Error())
+		return
+	}
 
-	common.ResMsg(res, 200, result)
+	common.ResSuccessMsg(res, 200, "操作成功")
 }
 
 func tpapiGetProjectDetail(res http.ResponseWriter, req *http.Request) {
@@ -425,5 +432,5 @@ func tpapiDeleteProject(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	common.ResMsg(res, 200, "操作成功")
+	common.ResSuccessMsg(res, 200, "操作成功")
 }
