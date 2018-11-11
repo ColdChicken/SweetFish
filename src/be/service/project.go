@@ -3,6 +3,9 @@ package service
 import (
 	"be/common/log"
 	"be/dao"
+	"fmt"
+	"path"
+	"strings"
 )
 
 type Project struct {
@@ -40,12 +43,17 @@ func NewProject(id int64, username string, fullName string, sourceCodeIp string,
 	return project
 }
 
+// GetCodeDir 获取源码的相对路径，对于同一个项目来说这个路径是唯一的
+func (p *Project) GetCodeDir() string {
+	return path.Join(fmt.Sprintf("%d", p.Id), strings.Replace(p.FullName, "/", "_", -1))
+}
+
 // Init 执行初始化动作
 // 包含下载源码、执行初始化动作等
 func (p *Project) Init() {
 	service, err := p.serviceMgr.CreateService(p.SourceCodeIp, p)
 	if err != nil {
-		log.Errorf("%d 获取service失败 %s", p.Id, err.Error())
+		log.Errorf("project id %d, 获取service失败 %s", p.Id, err.Error())
 		p.updateStatus("失败")
 		return
 	}
@@ -74,11 +82,16 @@ func (p *Project) Init() {
 
 // fetchCodes 下载源码
 func (p *Project) fetchCodes() error {
-	return nil
+	err := p.service.FetchCodes()
+	if err != nil {
+		log.Errorln(err.Error())
+	}
+	return err
 }
 
 // init 初始化项目
 func (p *Project) init() error {
+	// 当前不需要做任何事情
 	return nil
 }
 

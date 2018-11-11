@@ -1,4 +1,4 @@
-.PHONY: all be fe webpack clean
+.PHONY: all be nimo fe webpack clean
 
 GOPATH :=
 ifeq ($(OS),Windows_NT)
@@ -9,10 +9,13 @@ endif
 
 export GOPATH
 
-all: be fe
+all: be nimo fe
 
 be:
 	go install be/cmd/sweetfish
+
+nimo:
+	go install be/cmd/nimo
 
 webpack:
 	cd src/fe && npm run build

@@ -46,6 +46,16 @@ type WWWOptions struct {
 	// 小程序信息
 	TPAppId  string
 	TPSecret string
+
+	// Service信息
+	ServiceHTTPAddress string
+	ServiceHTTPPort    uint64
+
+	// 源码路径
+	CodesRootPath string
+
+	// 下载源码超时时间
+	CodeFetchTimeout int64
 }
 
 var Options WWWOptions
@@ -69,6 +79,10 @@ func (o *WWWOptions) InitOptions() {
 	flag.BoolVar(&o.EnableTls, "enable_tls", false, "EnableTls")
 	flag.StringVar(&o.TPAppId, "tp_appid", "", "TPAppId")
 	flag.StringVar(&o.TPSecret, "tp_secret", "", "TPSecret")
+	flag.StringVar(&o.ServiceHTTPAddress, "service_http_address", "127.0.0.1", "Service HTTP Address")
+	flag.Uint64Var(&o.ServiceHTTPPort, "service_http_port", 19512, "Service HTTP Port")
+	flag.StringVar(&o.CodesRootPath, "codes_root_path", "D:\\logs", "CodesRootPath")
+	flag.Int64Var(&o.CodeFetchTimeout, "code_fetch_timeout", 600, "CodeFetchTimeout")
 
 	iniflags.Parse()
 }

@@ -23,6 +23,8 @@ func doServe() {
 		}
 	}()
 
+	// todo 启动project和service的校对比较服务
+
 	// 初始化DB
 	mysql.DB.InitConn()
 	// 初始化服务,并启动服务
