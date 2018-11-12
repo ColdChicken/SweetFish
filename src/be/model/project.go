@@ -2,6 +2,7 @@ package model
 
 import (
 	"be/common/log"
+	"be/dao"
 	"be/service"
 	"be/structs"
 )
@@ -9,6 +10,7 @@ import (
 type ProjectMgr struct {
 	serviceMgr *service.ServiceMgr
 	projectMgr *service.ProjectMgr
+	projectDao *dao.ProjectDao
 }
 
 var Project *ProjectMgr
@@ -19,7 +21,12 @@ func init() {
 	Project = &ProjectMgr{
 		serviceMgr: serviceMgr,
 		projectMgr: projectMgr,
+		projectDao: &dao.ProjectDao{},
 	}
+}
+
+func (m *ProjectMgr) InitProjects() {
+	m.projectMgr.InitProjectsFromDB()
 }
 
 // CreateProject 创建项目
@@ -48,36 +55,36 @@ func (m *ProjectMgr) CreateProject(requestUser *structs.UserInfo, projectId stri
 
 // ListProjects 列出被查询用户的项目基本信息列表
 func (m *ProjectMgr) ListProjects(requestUser *structs.UserInfo) ([]*structs.Project, error) {
-	return nil, nil
-}
-
-// GetProjectDetail 查询项目详情
-func (m *ProjectMgr) GetProjectDetail(requestUser *structs.UserInfo, projectId string) (*structs.ProjectDetail, error) {
-	return nil, nil
+	return m.projectDao.ListProjectsByUser(requestUser.Username)
 }
 
 // OpenProject 用户打开某个已经创建完成的项目
 // 打开项目意味着:
 // * 对于LSP的服务，此动作会负责执行相关初始化动作
-// * 加载此项目的项目信息、文件目录信息等返回给用户
 // * 根据项目情况启动后台语义分析等服务
-func (m *ProjectMgr) OpenProject(requestUser *structs.UserInfo, projectId string) (*structs.ProjectDetail, error) {
-	return nil, nil
+// * ...
+func (m *ProjectMgr) OpenProject(requestUser *structs.UserInfo, projectId int64) (*structs.OpenProjectResult, error) {
+	project, err := m.projectMgr.GetProjectByUserAndProjectId(requestUser.Username, projectId)
+	if err != nil {
+		log.Errorln(err.Error())
+		return nil, err
+	}
+	return project.Open()
 }
 
 // DoActionInProject 用户在项目中进行某种操作
 // action表示用户进行的操作，根据操作的不同actionRawInfo中会包含不同的信息
-func (m *ProjectMgr) DoActionInProject(requestUser *structs.UserInfo, projectId string, action string, actionRawInfo string) (*structs.ActionResult, error) {
+func (m *ProjectMgr) DoActionInProject(requestUser *structs.UserInfo, projectId int64, action string, actionRawInfo string) (*structs.ActionResult, error) {
 	return nil, nil
 }
 
 // CloseProject 用户关闭某个已经打开的项目
 // 关闭项目会根据实际情况决定是否关闭后台服务
-func (m *ProjectMgr) CloseProject(requestUser *structs.UserInfo, projectId string) (*structs.ProjectDetail, error) {
+func (m *ProjectMgr) CloseProject(requestUser *structs.UserInfo, projectId int64) (*structs.Project, error) {
 	return nil, nil
 }
 
 // DeleteProject 删除项目
-func (m *ProjectMgr) DeleteProject(requestUser *structs.UserInfo, projectId string) error {
+func (m *ProjectMgr) DeleteProject(requestUser *structs.UserInfo, projectId int64) error {
 	return nil
 }

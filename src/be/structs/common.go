@@ -32,10 +32,29 @@ type GitHubProjectDownloadInfo struct {
 
 // Project 用户项目基本信息
 type Project struct {
+	Id       int64  `json:"id"`
+	FullName string `json:"fullName"`
+	Config   string `json:"config"`
+	Status   string `json:"status"`
 }
 
-// ProjectDetail 用户的项目详情
-type ProjectDetail struct {
+// ProjectInfo 内部初始化用的项目信息
+type ProjectInfo struct {
+	// 基本信息
+	Id           int64
+	Username     string
+	FullName     string
+	SourceCodeIp string
+	Config       string
+	Status       string
+}
+
+// 打开项目结果信息
+type OpenProjectResult struct {
+	// 打开结果: 成功/失败
+	Result string `json:"result"`
+	// 失败说明
+	ErrMsg string `json:"errMsg"`
 }
 
 // ActionResult 用户采取动作后的返回信息

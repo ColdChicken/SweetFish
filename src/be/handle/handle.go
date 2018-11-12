@@ -53,8 +53,6 @@ func initTPAPIMapping(r *server.WWWMux) {
 
 	// 用户选择项目后创建相关项目
 	r.RegistURLMapping("/v1/tp/project/create", "POST", tpapiCreateProject)
-	// 获取项目相关信息
-	r.RegistURLMapping("/v1/tp/project/detail", "POST", tpapiGetProjectDetail)
 	// 列出当前用户的项目列表
 	r.RegistURLMapping("/v1/tp/project/list", "POST", tpapiListProjects)
 	// 用户打开项目

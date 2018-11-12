@@ -3,6 +3,7 @@ package service
 import (
 	"be/common/log"
 	"be/dao"
+	"be/structs"
 	"fmt"
 	"path"
 	"strings"
@@ -106,6 +107,48 @@ func (p *Project) updateStatus(status string) error {
 func (p *Project) setService(service *Service) {
 	if p.service != nil {
 		p.service.Remove()
+		p.service = nil
 	}
 	p.service = service
+}
+
+// Open 打开项目
+func (p *Project) Open() (*structs.OpenProjectResult, error) {
+	result := &structs.OpenProjectResult{Result: "成功"}
+
+	// 判断项目状态是否可以打开
+	if p.Status != "正常" {
+		result.Result = "失败"
+		result.ErrMsg = "当前的项目状态不为'正常'。如果项目正处于'加载中'则请等待服务器端下载完成相关源码，否则请删除项目后重新添加此项目。"
+		return result, nil
+	}
+
+	// 使用新的service
+	if p.service != nil {
+		p.service.Remove()
+		p.service = nil
+	}
+	service, err := p.serviceMgr.CreateService(p.SourceCodeIp, p)
+	if err != nil {
+		log.Errorf("project id %d, 获取service失败 %s", p.Id, err.Error())
+		p.updateStatus("失败")
+		result.Result = "失败"
+		result.ErrMsg = "服务端异常，请稍后重试"
+		return result, nil
+	}
+	p.setService(service)
+
+	// worker端执行open动作
+	p.updateStatus("打开中")
+	err = p.service.Open()
+	if err != nil {
+		log.Errorf("%d Open失败 %s", p.Id, err.Error())
+		p.updateStatus("正常")
+		result.Result = "失败"
+		result.ErrMsg = "服务端异常，请稍后重试"
+		return result, nil
+	}
+	p.updateStatus("正常")
+	result.Result = "成功"
+	return result, nil
 }

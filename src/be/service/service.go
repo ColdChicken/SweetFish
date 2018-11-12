@@ -50,7 +50,7 @@ func (s *Service) Connect() {
 
 	requestUrl := fmt.Sprintf("%s/v1/worker/create", s.workerMachine.getServiceAddress())
 
-	request := &structs.WorkerCreateWorkerRequest{ServiceId: s.id}
+	request := &structs.WorkerCreateWorkerRequest{ServiceId: s.id, CodeDir: s.project.GetCodeDir(), ProjectFullName: s.project.FullName}
 
 	hc := &http.Client{}
 
@@ -108,9 +108,58 @@ func (s *Service) FetchCodes() error {
 	requestUrl := fmt.Sprintf("%s/v1/worker/fetchcodes", s.workerMachine.getServiceAddress())
 
 	request := &structs.WorkerFetchCodesRequest{
-		ServiceId:       s.id,
-		CodeDir:         s.project.GetCodeDir(),
-		ProjectFullName: s.project.FullName,
+		ServiceId: s.id,
+	}
+
+	hc := &http.Client{}
+
+	b, err := json.Marshal(request)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"err": err.Error(),
+		}).Error("生成JSON串失败")
+		return err
+	}
+
+	req, err := http.NewRequest("POST", requestUrl, bytes.NewBuffer(b))
+	if err != nil {
+		log.WithFields(log.Fields{
+			"url": requestUrl,
+			"err": err.Error(),
+		}).Error("构造请求失败")
+		return err
+	}
+
+	resp, err := hc.Do(req)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"url": requestUrl,
+			"err": err.Error(),
+		}).Error("发送请求失败")
+		return err
+	}
+
+	defer resp.Body.Close()
+	respContent, _ := ioutil.ReadAll(resp.Body)
+
+	if resp.StatusCode != 200 {
+		log.WithFields(log.Fields{
+			"url": requestUrl,
+			"msg": string(respContent),
+		}).Error("请求对端处理失败")
+		return xe.New("请求对端处理失败")
+	} else {
+		return nil
+	}
+}
+
+// Open 执行项目打开动作
+func (s *Service) Open() error {
+	requestUrl := fmt.Sprintf("%s/v1/worker/open", s.workerMachine.getServiceAddress())
+
+	request := &structs.WorkerOpenProjectRequest{
+		ServiceId: s.id,
+		Config:    s.project.Config,
 	}
 
 	hc := &http.Client{}

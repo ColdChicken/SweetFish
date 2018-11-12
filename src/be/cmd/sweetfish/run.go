@@ -1,6 +1,7 @@
 package main
 
 import (
+	"be/model"
 	go_log "log"
 	"math/rand"
 	"net/http"
@@ -27,6 +28,8 @@ func doServe() {
 
 	// 初始化DB
 	mysql.DB.InitConn()
+	// 初始化项目信息
+	model.Project.InitProjects()
 	// 初始化服务,并启动服务
 	mux := server.New()
 	// URL映射

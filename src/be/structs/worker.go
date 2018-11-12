@@ -5,7 +5,9 @@ type WorkerErrMsg struct {
 }
 
 type WorkerCreateWorkerRequest struct {
-	ServiceId string `json:"serviceId"`
+	ServiceId       string `json:"serviceId"`
+	CodeDir         string `json:"codeDir"`
+	ProjectFullName string `json:"projectFullName"`
 }
 
 type WorkerCreateWorkerResponse struct {
@@ -13,7 +15,10 @@ type WorkerCreateWorkerResponse struct {
 }
 
 type WorkerFetchCodesRequest struct {
-	ServiceId       string `json:"serviceId"`
-	CodeDir         string `json:"codeDir"`
-	ProjectFullName string `json:"projectFullName"`
+	ServiceId string `json:"serviceId"`
+}
+
+type WorkerOpenProjectRequest struct {
+	ServiceId string `json:"serviceId"`
+	Config    string `json:"config"`
 }

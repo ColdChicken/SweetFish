@@ -20,8 +20,8 @@ func init() {
 }
 
 // CreateWorker 创建worker
-func (m *WorkerMgr) CreateWorker(serviceId string) (*Worker, error) {
-	worker := NewWorker(serviceId, m)
+func (m *WorkerMgr) CreateWorker(serviceId string, codeDir string, fullName string) (*Worker, error) {
+	worker := NewWorker(serviceId, m, codeDir, fullName)
 	m.workersLock.Lock()
 	if _, ok := m.workers[serviceId]; ok == false {
 		m.workers[serviceId] = worker

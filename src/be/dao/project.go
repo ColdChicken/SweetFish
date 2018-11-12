@@ -4,9 +4,104 @@ import (
 	xe "be/common/error"
 	"be/common/log"
 	"be/mysql"
+	"be/structs"
 )
 
 type ProjectDao struct {
+}
+
+func (d *ProjectDao) SyncAllProjectsForInitial() ([]*structs.ProjectInfo, error) {
+	projects := []*structs.ProjectInfo{}
+
+	tx := mysql.DB.GetTx()
+	sql := "SELECT PROJECT.id, PROJECT.fullName, PROJECT.status, PROJECT.config, PROJECT.sourceCodeIp, USER_PROJECT.username FROM PROJECT, USER_PROJECT WHERE PROJECT.id=USER_PROJECT.projectId ORDER BY PROJECT.id DESC"
+	stmt, err := tx.Prepare(sql)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"sql": sql,
+			"err": err.Error(),
+		}).Error("prepare错误")
+		tx.Rollback()
+		return projects, xe.DBError()
+	}
+
+	rows, err := stmt.Query()
+	if err != nil {
+		log.WithFields(log.Fields{
+			"sql": sql,
+			"err": err.Error(),
+		}).Error("Query错误")
+		stmt.Close()
+		tx.Rollback()
+		return projects, xe.DBError()
+	}
+
+	for rows.Next() {
+		project := &structs.ProjectInfo{}
+		err := rows.Scan(&project.Id, &project.FullName, &project.Status, &project.Config, &project.SourceCodeIp, &project.Username)
+		if err != nil {
+			log.WithFields(log.Fields{
+				"err": err.Error(),
+			}).Error("rows.Next错误")
+			rows.Close()
+			stmt.Close()
+			tx.Rollback()
+			return projects, xe.DBError()
+		}
+		projects = append(projects, project)
+	}
+	rows.Close()
+	stmt.Close()
+	tx.Commit()
+
+	return projects, nil
+}
+
+func (d *ProjectDao) ListProjectsByUser(username string) ([]*structs.Project, error) {
+	projects := []*structs.Project{}
+
+	tx := mysql.DB.GetTx()
+	sql := "SELECT PROJECT.id, PROJECT.fullName, PROJECT.status, PROJECT.config FROM PROJECT, USER_PROJECT WHERE PROJECT.id=USER_PROJECT.projectId AND USER_PROJECT.username=? ORDER BY PROJECT.id DESC"
+	stmt, err := tx.Prepare(sql)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"sql": sql,
+			"err": err.Error(),
+		}).Error("prepare错误")
+		tx.Rollback()
+		return projects, xe.DBError()
+	}
+
+	rows, err := stmt.Query(username)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"sql": sql,
+			"err": err.Error(),
+		}).Error("Query错误")
+		stmt.Close()
+		tx.Rollback()
+		return projects, xe.DBError()
+	}
+
+	for rows.Next() {
+		project := &structs.Project{}
+		err := rows.Scan(&project.Id, &project.FullName, &project.Status, &project.Config)
+		if err != nil {
+			log.WithFields(log.Fields{
+				"err": err.Error(),
+			}).Error("rows.Next错误")
+			rows.Close()
+			stmt.Close()
+			tx.Rollback()
+			return projects, xe.DBError()
+		}
+		projects = append(projects, project)
+	}
+	rows.Close()
+	stmt.Close()
+	tx.Commit()
+
+	return projects, nil
 }
 
 func (d *ProjectDao) CreateProject(fullName string, sourceCodeIp string) (int64, error) {
