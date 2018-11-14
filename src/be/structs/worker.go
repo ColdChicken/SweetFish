@@ -22,3 +22,7 @@ type WorkerOpenProjectRequest struct {
 	ServiceId string `json:"serviceId"`
 	Config    string `json:"config"`
 }
+
+type WorkerDeleteWorkerRequest struct {
+	ServiceId string `json:"serviceId"`
+}

@@ -205,6 +205,55 @@ func (s *Service) Open() error {
 }
 
 // Remove 销毁此服务
-func (s *Service) Remove() {
-	// todo
+func (s *Service) Remove() error {
+	// 清除引用
+	s.workerId = ""
+
+	// 销毁关联的worker
+	requestUrl := fmt.Sprintf("%s/v1/worker/delete", s.workerMachine.getServiceAddress())
+
+	request := &structs.WorkerDeleteWorkerRequest{
+		ServiceId: s.id,
+	}
+
+	hc := &http.Client{}
+
+	b, err := json.Marshal(request)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"err": err.Error(),
+		}).Error("生成JSON串失败")
+		return err
+	}
+
+	req, err := http.NewRequest("POST", requestUrl, bytes.NewBuffer(b))
+	if err != nil {
+		log.WithFields(log.Fields{
+			"url": requestUrl,
+			"err": err.Error(),
+		}).Error("构造请求失败")
+		return err
+	}
+
+	resp, err := hc.Do(req)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"url": requestUrl,
+			"err": err.Error(),
+		}).Error("发送请求失败")
+		return err
+	}
+
+	defer resp.Body.Close()
+	respContent, _ := ioutil.ReadAll(resp.Body)
+
+	if resp.StatusCode != 200 {
+		log.WithFields(log.Fields{
+			"url": requestUrl,
+			"msg": string(respContent),
+		}).Error("请求对端处理失败")
+		return xe.New("请求对端处理失败")
+	} else {
+		return nil
+	}
 }

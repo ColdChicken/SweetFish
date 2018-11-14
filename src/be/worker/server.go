@@ -11,6 +11,8 @@ func New() *server.WWWMux {
 func InitHandle(r *server.WWWMux) {
 	// 创建worker
 	r.RegistURLMapping("/v1/worker/create", "POST", apiCreateWorker)
+	// 销毁worker
+	r.RegistURLMapping("/v1/worker/delete", "POST", apiDeleteWorker)
 	// 下载源码
 	r.RegistURLMapping("/v1/worker/fetchcodes", "POST", apiFetchCodes)
 	// 打开项目

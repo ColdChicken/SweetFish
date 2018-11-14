@@ -5,8 +5,11 @@ import (
 	xe "be/common/error"
 	"be/common/log"
 	"be/options"
+	"be/worker/lang_worker"
+	"be/worker/process"
 	"fmt"
 	"path"
+	"strings"
 	"sync"
 
 	uuid "github.com/satori/go.uuid"
@@ -24,6 +27,14 @@ type Worker struct {
 	// 项目全名
 	projectFullName string
 
+	// language worker, key为语言名，如go、javascript
+	langWorkers map[string]lang_worker.LangWorker
+	// 已经启动的language worker信息，这里提供这个是为了避免重复调用langWorker的Init，内容为对应的语言名
+	langWorkersInitialied []string
+
+	// 进程管理器
+	processMgr *process.ProcessMgr
+
 	// 是否正在下载源码
 	inCodesFetching bool
 
@@ -31,24 +42,45 @@ type Worker struct {
 	hasOpened bool
 	// 字符串类型的配置信息
 	rawConfig string
+	// key-value类型的配置信息
+	kvConfig map[string]string
 }
 
 func NewWorker(serviceId string, mgr *WorkerMgr, codeDir string, fullName string) *Worker {
-	return &Worker{
-		id:              fmt.Sprintf("%s", uuid.NewV4()),
-		serviceId:       serviceId,
-		mgr:             mgr,
-		codePath:        path.Join(options.Options.CodesRootPath, codeDir),
-		projectFullName: fullName,
-		lock:            sync.Mutex{},
-		inCodesFetching: false,
-		hasOpened:       false,
+	worker := &Worker{
+		id:                    fmt.Sprintf("%s", uuid.NewV4()),
+		serviceId:             serviceId,
+		mgr:                   mgr,
+		codePath:              path.Join(options.Options.CodesRootPath, codeDir),
+		projectFullName:       fullName,
+		lock:                  sync.Mutex{},
+		inCodesFetching:       false,
+		hasOpened:             false,
+		processMgr:            process.NewProcessMgr(),
+		langWorkersInitialied: []string{},
+		kvConfig:              map[string]string{},
+		langWorkers:           map[string]lang_worker.LangWorker{},
 	}
+
+	return worker
 }
 
 // Die 删除此Worker
+// (todo) 此方法只会停止该Worker的相关资源
 func (w *Worker) Die() {
-	// todo
+	go w.die()
+}
+func (w *Worker) die() {
+	// 调用各个langWorker的关闭动作
+	for _, lw := range w.langWorkers {
+		lw.Close()
+	}
+
+	// 关闭进程
+	w.processMgr.Close()
+
+	// 移除此worker
+	w.mgr.RemoveWorker(w)
 }
 
 // FetchCodes 下载源码
@@ -98,8 +130,24 @@ func (w *Worker) Open(rawConfig string) error {
 	w.lock.Unlock()
 
 	w.rawConfig = rawConfig
+	if strings.TrimSpace(w.rawConfig) == "" {
+		w.rawConfig = "{}"
+	}
+	// 解析配置
+	if err := common.ParseJsonStr(w.rawConfig, &w.kvConfig); err != nil {
+		log.Errorln("配置格式不正确, 解析模板JSON失败")
+		return xe.New("配置格式不正确")
+	}
 
-	// todo 启动各个分析服务
+	// 调用各个langWorker的启动初始化动作
+	for lang, lw := range w.langWorkers {
+		if cfg, ok := w.kvConfig[lang]; ok == true {
+			lw.Init(w.processMgr, w.codePath, w.projectFullName, cfg)
+		} else {
+			lw.Init(w.processMgr, w.codePath, w.projectFullName, "")
+		}
+
+	}
 
 	return nil
 }

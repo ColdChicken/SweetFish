@@ -44,3 +44,12 @@ func (m *WorkerMgr) GetWorkerByServiceId(serviceId string) (*Worker, error) {
 		return nil, xe.New("worker不存在")
 	}
 }
+
+func (m *WorkerMgr) RemoveWorker(worker *Worker) {
+	m.workersLock.Lock()
+	tw, ok := m.workers[worker.serviceId]
+	if ok == true && tw.id == worker.id {
+		delete(m.workers, worker.serviceId)
+	}
+	m.workersLock.Unlock()
+}
