@@ -5,6 +5,7 @@ import (
 	xe "be/common/error"
 	"be/common/log"
 	"be/options"
+	"be/structs"
 	"be/worker/lang_worker"
 	"be/worker/process"
 	"fmt"
@@ -28,9 +29,7 @@ type Worker struct {
 	projectFullName string
 
 	// language worker, key为语言名，如go、javascript
-	langWorkers map[string]lang_worker.LangWorker
-	// 已经启动的language worker信息，这里提供这个是为了避免重复调用langWorker的Init，内容为对应的语言名
-	langWorkersInitialied []string
+	langWorkers map[common.LangType]lang_worker.LangWorker
 
 	// 进程管理器
 	processMgr *process.ProcessMgr
@@ -43,23 +42,22 @@ type Worker struct {
 	// 字符串类型的配置信息
 	rawConfig string
 	// key-value类型的配置信息
-	kvConfig map[string]string
+	kvConfig map[common.LangType]string
 }
 
 func NewWorker(serviceId string, mgr *WorkerMgr, codeDir string, fullName string) *Worker {
 	worker := &Worker{
-		id:                    fmt.Sprintf("%s", uuid.NewV4()),
-		serviceId:             serviceId,
-		mgr:                   mgr,
-		codePath:              path.Join(options.Options.CodesRootPath, codeDir),
-		projectFullName:       fullName,
-		lock:                  sync.Mutex{},
-		inCodesFetching:       false,
-		hasOpened:             false,
-		processMgr:            process.NewProcessMgr(),
-		langWorkersInitialied: []string{},
-		kvConfig:              map[string]string{},
-		langWorkers:           map[string]lang_worker.LangWorker{},
+		id:              fmt.Sprintf("%s", uuid.NewV4()),
+		serviceId:       serviceId,
+		mgr:             mgr,
+		codePath:        path.Join(options.Options.CodesRootPath, codeDir),
+		projectFullName: fullName,
+		lock:            sync.Mutex{},
+		inCodesFetching: false,
+		hasOpened:       false,
+		processMgr:      process.NewProcessMgr(),
+		kvConfig:        map[common.LangType]string{},
+		langWorkers:     map[common.LangType]lang_worker.LangWorker{},
 	}
 
 	return worker
@@ -119,7 +117,7 @@ func (w *Worker) FetchCodes() error {
 }
 
 // Open 打开项目
-func (w *Worker) Open(rawConfig string) error {
+func (w *Worker) Open(rawConfig string, langTypes []common.LangType) error {
 	log.Debugf("worker %s 开始打开", w.id)
 	w.lock.Lock()
 	if w.hasOpened == true {
@@ -139,6 +137,16 @@ func (w *Worker) Open(rawConfig string) error {
 		return xe.New("配置格式不正确")
 	}
 
+	// 获取语言服务器
+	for _, langType := range langTypes {
+		lw := lang_worker.GetLangWorkerByLangType(langType)
+		if lw == nil {
+			log.Errorln("无法获取到语言服务器")
+			continue
+		}
+		w.langWorkers[langType] = lw
+	}
+
 	// 调用各个langWorker的启动初始化动作
 	for lang, lw := range w.langWorkers {
 		if cfg, ok := w.kvConfig[lang]; ok == true {
@@ -150,4 +158,32 @@ func (w *Worker) Open(rawConfig string) error {
 	}
 
 	return nil
+}
+
+// Open 初始化
+func (w *Worker) Init() (*structs.WorkerInitResponse, error) {
+	response := &structs.WorkerInitResponse{LangTypes: []common.LangType{}}
+	// 获取此项目的源码文件信息
+	files, err := common.GetDirAllFiles(w.codePath)
+	if err != nil {
+		log.Errorf(err.Error())
+		return nil, err
+	}
+
+	// 判断文件类型
+	for _, fileName := range files {
+		langType := common.GetLangTypeByFileName(fileName)
+		hasLangType := false
+		for _, lt := range response.LangTypes {
+			if lt == langType {
+				hasLangType = true
+				break
+			}
+		}
+		if hasLangType == false {
+			response.LangTypes = append(response.LangTypes, langType)
+		}
+	}
+
+	return response, nil
 }

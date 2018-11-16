@@ -14,7 +14,7 @@ func (d *ProjectDao) SyncAllProjectsForInitial() ([]*structs.ProjectInfo, error)
 	projects := []*structs.ProjectInfo{}
 
 	tx := mysql.DB.GetTx()
-	sql := "SELECT PROJECT.id, PROJECT.fullName, PROJECT.status, PROJECT.config, PROJECT.sourceCodeIp, USER_PROJECT.username FROM PROJECT, USER_PROJECT WHERE PROJECT.id=USER_PROJECT.projectId ORDER BY PROJECT.id DESC"
+	sql := "SELECT PROJECT.id, PROJECT.fullName, PROJECT.status, PROJECT.config, PROJECT.sourceCodeIp, USER_PROJECT.username, PROJECT.langTypes FROM PROJECT, USER_PROJECT WHERE PROJECT.id=USER_PROJECT.projectId ORDER BY PROJECT.id DESC"
 	stmt, err := tx.Prepare(sql)
 	if err != nil {
 		log.WithFields(log.Fields{
@@ -38,7 +38,7 @@ func (d *ProjectDao) SyncAllProjectsForInitial() ([]*structs.ProjectInfo, error)
 
 	for rows.Next() {
 		project := &structs.ProjectInfo{}
-		err := rows.Scan(&project.Id, &project.FullName, &project.Status, &project.Config, &project.SourceCodeIp, &project.Username)
+		err := rows.Scan(&project.Id, &project.FullName, &project.Status, &project.Config, &project.SourceCodeIp, &project.Username, &project.LangTypesStr)
 		if err != nil {
 			log.WithFields(log.Fields{
 				"err": err.Error(),
@@ -106,7 +106,7 @@ func (d *ProjectDao) ListProjectsByUser(username string) ([]*structs.Project, er
 
 func (d *ProjectDao) CreateProject(fullName string, sourceCodeIp string) (int64, error) {
 	tx := mysql.DB.GetTx()
-	sql := "INSERT INTO PROJECT (fullName, status, sourceCodeIp, config) VALUES(?, '项目已创建', ?, '')"
+	sql := "INSERT INTO PROJECT (fullName, status, sourceCodeIp, config, langTypes) VALUES(?, '项目已创建', ?, '', '')"
 	stmt, err := tx.Prepare(sql)
 	if err != nil {
 		log.WithFields(log.Fields{
@@ -196,6 +196,32 @@ func (d *ProjectDao) UpdateStatus(projectId int64, status string) error {
 		return err
 	}
 	_, err = stmt.Exec(status, projectId)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"err": err.Error(),
+		}).Error("query错误")
+		stmt.Close()
+		tx.Rollback()
+		return err
+	}
+	stmt.Close()
+	tx.Commit()
+	return nil
+}
+
+func (d *ProjectDao) SyncLangTypes(projectId int64, langTypes string) error {
+	tx := mysql.DB.GetTx()
+	sql := "UPDATE PROJECT SET langTypes=? WHERE id=?"
+	stmt, err := tx.Prepare(sql)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"sql": sql,
+			"err": err.Error(),
+		}).Error("prepare错误")
+		tx.Rollback()
+		return err
+	}
+	_, err = stmt.Exec(langTypes, projectId)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"err": err.Error(),

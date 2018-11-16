@@ -1,9 +1,11 @@
 package service
 
 import (
+	"be/common"
 	"be/common/log"
 	"be/dao"
 	"be/structs"
+	"encoding/json"
 	"fmt"
 	"path"
 	"strings"
@@ -25,11 +27,14 @@ type Project struct {
 	// dao
 	projectDao *dao.ProjectDao
 
+	// 源码文件信息
+	langTypes []common.LangType
+
 	// 工作service
 	service *Service
 }
 
-func NewProject(id int64, username string, fullName string, sourceCodeIp string, config string, status string, projectMgr *ProjectMgr, serviceMgr *ServiceMgr) *Project {
+func NewProject(id int64, username string, fullName string, sourceCodeIp string, config string, status string, projectMgr *ProjectMgr, serviceMgr *ServiceMgr, langTypes []common.LangType) *Project {
 	project := &Project{
 		Id:           id,
 		Username:     username,
@@ -40,7 +45,10 @@ func NewProject(id int64, username string, fullName string, sourceCodeIp string,
 		projectMgr:   projectMgr,
 		serviceMgr:   serviceMgr,
 		projectDao:   &dao.ProjectDao{},
+		langTypes:    langTypes,
 	}
+	// 默认的源码文件类型
+	project.langTypes = append(project.langTypes, common.PlainText)
 	return project
 }
 
@@ -92,8 +100,32 @@ func (p *Project) fetchCodes() error {
 
 // init 初始化项目
 func (p *Project) init() error {
-	// 当前不需要做任何事情
+	// 获取此项目的源码文件信息
+	langTypes, err := p.service.Init()
+	if err != nil {
+		return err
+	}
+	p.langTypes = langTypes
+
+	// 相关信息入库
+	err = p.syncLangTypes()
+	if err != nil {
+		log.Errorf(err.Error())
+		return err
+	}
+
 	return nil
+}
+
+func (p *Project) syncLangTypes() error {
+	b, err := json.Marshal(p.langTypes)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"err": err.Error(),
+		}).Error("JSON生成失败")
+		return err
+	}
+	return p.projectDao.SyncLangTypes(p.Id, string(b))
 }
 
 func (p *Project) updateStatus(status string) error {

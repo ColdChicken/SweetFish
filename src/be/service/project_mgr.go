@@ -1,6 +1,7 @@
 package service
 
 import (
+	"be/common"
 	xe "be/common/error"
 	"be/common/log"
 	"be/dao"
@@ -46,7 +47,18 @@ func (m *ProjectMgr) InitProjectsFromDB() {
 			projectInDB.Status = "失败"
 		}
 
-		m.projects[projectInDB.Username] = append(m.projects[projectInDB.Username], NewProject(projectInDB.Id, projectInDB.Username, projectInDB.FullName, projectInDB.SourceCodeIp, projectInDB.Config, projectInDB.Status, m, m.serviceMgr))
+		langTypes := []common.LangType{}
+		if projectInDB.LangTypesStr != "" {
+			if err := common.ParseJsonStr(projectInDB.LangTypesStr, &langTypes); err != nil {
+				log.Errorf("%d 解析模板JSON失败，项目的语言类型信息无法正常加载", projectInDB.Id)
+				continue
+			}
+		} else {
+			log.Warnf("%d 的语言信息在DB中为空", projectInDB.Id)
+			langTypes = []common.LangType{common.PlainText}
+		}
+
+		m.projects[projectInDB.Username] = append(m.projects[projectInDB.Username], NewProject(projectInDB.Id, projectInDB.Username, projectInDB.FullName, projectInDB.SourceCodeIp, projectInDB.Config, projectInDB.Status, m, m.serviceMgr, langTypes))
 	}
 }
 
@@ -83,7 +95,7 @@ func (m *ProjectMgr) CreateProjectForUser(username string, sourceCodeIp string, 
 	if err != nil {
 		return nil, err
 	}
-	project := NewProject(id, username, fullName, sourceCodeIp, config, status, m, m.serviceMgr)
+	project := NewProject(id, username, fullName, sourceCodeIp, config, status, m, m.serviceMgr, []common.LangType{})
 	m.projectsLock.Lock()
 	if _, ok := m.projects[username]; ok == false {
 		m.projects[username] = []*Project{}

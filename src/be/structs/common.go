@@ -47,6 +47,7 @@ type ProjectInfo struct {
 	SourceCodeIp string
 	Config       string
 	Status       string
+	LangTypesStr string
 }
 
 // 打开项目结果信息

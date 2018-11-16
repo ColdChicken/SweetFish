@@ -42,7 +42,67 @@ func (s *Service) Connected() bool {
 	return s.workerId != ""
 }
 
-// Connect与对端创建worker服务
+// Init 对端执行初始化动作
+func (s *Service) Init() ([]common.LangType, error) {
+	requestUrl := fmt.Sprintf("%s/v1/worker/init", s.workerMachine.getServiceAddress())
+
+	request := &structs.WorkerInitRequest{
+		ServiceId: s.id,
+	}
+
+	hc := &http.Client{}
+
+	b, err := json.Marshal(request)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"err": err.Error(),
+		}).Error("生成JSON串失败")
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", requestUrl, bytes.NewBuffer(b))
+	if err != nil {
+		log.WithFields(log.Fields{
+			"url": requestUrl,
+			"err": err.Error(),
+		}).Error("构造请求失败")
+		return nil, err
+	}
+
+	resp, err := hc.Do(req)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"url": requestUrl,
+			"err": err.Error(),
+		}).Error("发送请求失败")
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+	respContent, _ := ioutil.ReadAll(resp.Body)
+
+	if resp.StatusCode != 200 {
+		log.WithFields(log.Fields{
+			"url": requestUrl,
+			"msg": string(respContent),
+		}).Error("请求对端处理失败")
+		return nil, xe.New("请求对端处理失败")
+	} else {
+		response := &structs.WorkerInitResponse{}
+		if err := common.ParseJsonStr(string(respContent), response); err != nil {
+			log.WithFields(log.Fields{
+				"url":    requestUrl,
+				"result": string(respContent),
+				"err":    err.Error(),
+			}).Error("解析模板JSON失败")
+			return nil, xe.New("解析模板JSON失败")
+		} else {
+			return response.LangTypes, nil
+		}
+	}
+}
+
+// Connect 与对端创建worker服务
 func (s *Service) Connect() {
 	if s.workerId != "" {
 		log.Warnln("当前service的workerId不为空，可能会造成未知问题")
@@ -160,6 +220,7 @@ func (s *Service) Open() error {
 	request := &structs.WorkerOpenProjectRequest{
 		ServiceId: s.id,
 		Config:    s.project.Config,
+		LangTypes: s.project.langTypes,
 	}
 
 	hc := &http.Client{}

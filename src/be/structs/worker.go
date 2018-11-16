@@ -1,5 +1,9 @@
 package structs
 
+import (
+	"be/common"
+)
+
 type WorkerErrMsg struct {
 	Msg string `json:"msg"`
 }
@@ -19,10 +23,19 @@ type WorkerFetchCodesRequest struct {
 }
 
 type WorkerOpenProjectRequest struct {
-	ServiceId string `json:"serviceId"`
-	Config    string `json:"config"`
+	ServiceId string            `json:"serviceId"`
+	Config    string            `json:"config"`
+	LangTypes []common.LangType `json:"langTypes"`
 }
 
 type WorkerDeleteWorkerRequest struct {
 	ServiceId string `json:"serviceId"`
+}
+
+type WorkerInitRequest struct {
+	ServiceId string `json:"serviceId"`
+}
+
+type WorkerInitResponse struct {
+	LangTypes []common.LangType `json:"langTypes"`
 }

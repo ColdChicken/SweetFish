@@ -1,6 +1,7 @@
 package lang_worker
 
 import (
+	"be/common"
 	"be/worker/process"
 )
 
@@ -31,4 +32,13 @@ type LangWorker interface {
 
 	// 销毁
 	Close()
+}
+
+func GetLangWorkerByLangType(langType common.LangType) LangWorker {
+	switch langType {
+	case common.PlainText:
+		return &PlainTextLangWorker{}
+	default:
+		return nil
+	}
 }
