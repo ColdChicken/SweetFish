@@ -42,6 +42,66 @@ func (s *Service) Connected() bool {
 	return s.workerId != ""
 }
 
+// ListCatalog 列出目录信息
+func (s *Service) ListCatalog() (*structs.ProjectCatalog, error) {
+	requestUrl := fmt.Sprintf("%s/v1/worker/listcatalog", s.workerMachine.getServiceAddress())
+
+	request := &structs.WorkerListCatalogRequest{
+		ServiceId: s.id,
+	}
+
+	hc := &http.Client{}
+
+	b, err := json.Marshal(request)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"err": err.Error(),
+		}).Error("生成JSON串失败")
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", requestUrl, bytes.NewBuffer(b))
+	if err != nil {
+		log.WithFields(log.Fields{
+			"url": requestUrl,
+			"err": err.Error(),
+		}).Error("构造请求失败")
+		return nil, err
+	}
+
+	resp, err := hc.Do(req)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"url": requestUrl,
+			"err": err.Error(),
+		}).Error("发送请求失败")
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+	respContent, _ := ioutil.ReadAll(resp.Body)
+
+	if resp.StatusCode != 200 {
+		log.WithFields(log.Fields{
+			"url": requestUrl,
+			"msg": string(respContent),
+		}).Error("请求对端处理失败")
+		return nil, xe.New("请求对端处理失败")
+	} else {
+		response := &structs.WorkerListCatalogResponse{}
+		if err := common.ParseJsonStr(string(respContent), response); err != nil {
+			log.WithFields(log.Fields{
+				"url":    requestUrl,
+				"result": string(respContent),
+				"err":    err.Error(),
+			}).Error("解析模板JSON失败")
+			return nil, xe.New("解析模板JSON失败")
+		} else {
+			return response.ProjectCatalog, nil
+		}
+	}
+}
+
 // Init 对端执行初始化动作
 func (s *Service) Init() ([]common.LangType, error) {
 	requestUrl := fmt.Sprintf("%s/v1/worker/init", s.workerMachine.getServiceAddress())

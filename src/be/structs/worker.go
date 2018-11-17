@@ -39,3 +39,11 @@ type WorkerInitRequest struct {
 type WorkerInitResponse struct {
 	LangTypes []common.LangType `json:"langTypes"`
 }
+
+type WorkerListCatalogRequest struct {
+	ServiceId string `json:"serviceId"`
+}
+
+type WorkerListCatalogResponse struct {
+	ProjectCatalog *ProjectCatalog `json:"catalog"`
+}

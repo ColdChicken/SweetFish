@@ -72,6 +72,16 @@ func (m *ProjectMgr) OpenProject(requestUser *structs.UserInfo, projectId int64)
 	return project.Open()
 }
 
+// ListProjectCatalog 列出某个项目的目录
+func (m *ProjectMgr) ListProjectCatalog(requestUser *structs.UserInfo, projectId int64) (*structs.ProjectCatalog, error) {
+	project, err := m.projectMgr.GetProjectByUserAndProjectId(requestUser.Username, projectId)
+	if err != nil {
+		log.Errorln(err.Error())
+		return nil, err
+	}
+	return project.ListCatalog()
+}
+
 // DoActionInProject 用户在项目中进行某种操作
 // action表示用户进行的操作，根据操作的不同actionRawInfo中会包含不同的信息
 func (m *ProjectMgr) DoActionInProject(requestUser *structs.UserInfo, projectId int64, action string, actionRawInfo string) (*structs.ActionResult, error) {
@@ -80,8 +90,13 @@ func (m *ProjectMgr) DoActionInProject(requestUser *structs.UserInfo, projectId 
 
 // CloseProject 用户关闭某个已经打开的项目
 // 关闭项目会根据实际情况决定是否关闭后台服务
-func (m *ProjectMgr) CloseProject(requestUser *structs.UserInfo, projectId int64) (*structs.Project, error) {
-	return nil, nil
+func (m *ProjectMgr) CloseProject(requestUser *structs.UserInfo, projectId int64) {
+	project, err := m.projectMgr.GetProjectByUserAndProjectId(requestUser.Username, projectId)
+	if err != nil {
+		log.Errorln(err.Error())
+		return
+	}
+	go project.Close()
 }
 
 // DeleteProject 删除项目

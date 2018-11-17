@@ -9,6 +9,7 @@ import (
 	"be/worker/lang_worker"
 	"be/worker/process"
 	"fmt"
+	"io/ioutil"
 	"path"
 	"strings"
 	"sync"
@@ -185,5 +186,83 @@ func (w *Worker) Init() (*structs.WorkerInitResponse, error) {
 		}
 	}
 
+	return response, nil
+}
+
+func (w *Worker) Inited() bool {
+	w.lock.Lock()
+	if w.inCodesFetching {
+		w.lock.Unlock()
+		return false
+	}
+	if w.hasOpened == false {
+		w.lock.Unlock()
+		return false
+	}
+	w.lock.Unlock()
+	return true
+}
+
+func getDirCatalogInfo(dir string) (*structs.ProjectCatalog, error) {
+	catalog := &structs.ProjectCatalog{Catalog: []*structs.ProjectUri{}}
+
+	directory, err := ioutil.ReadDir(dir)
+	if err != nil {
+		return nil, err
+	}
+	// 先加载目录
+	for _, f := range directory {
+		if f.IsDir() {
+			if f.Name() == ".git" {
+				continue
+			}
+			uri := &structs.ProjectUri{
+				Type:    "目录",
+				Name:    f.Name(),
+				SubDirs: []*structs.ProjectUri{},
+			}
+			subDirs, err := getDirCatalogInfo(path.Join(dir, f.Name()))
+			if err != nil {
+				return nil, err
+			}
+			uri.SubDirs = subDirs.Catalog
+			catalog.Catalog = append(catalog.Catalog, uri)
+		} else {
+			continue
+		}
+	}
+	// 后加载文件
+	for _, f := range directory {
+		if f.IsDir() {
+			continue
+		} else {
+			uri := &structs.ProjectUri{
+				Type:    "文件",
+				Name:    f.Name(),
+				SubDirs: []*structs.ProjectUri{},
+			}
+			catalog.Catalog = append(catalog.Catalog, uri)
+		}
+	}
+
+	return catalog, nil
+}
+
+// ListCatalog 列出目录
+func (w *Worker) ListCatalog() (*structs.WorkerListCatalogResponse, error) {
+	response := &structs.WorkerListCatalogResponse{}
+	// 判断状态
+	if w.Inited() == false {
+		return nil, xe.New("worker当前状态无法处理该请求")
+	}
+	// 获取目录信息
+	catalog, err := getDirCatalogInfo(w.codePath)
+	if err != nil {
+		log.Errorf("获取目录信息失败 %s", err.Error())
+		return nil, err
+	}
+	// 做个排序，按照目录以及名字排序
+
+	response.ProjectCatalog = catalog
 	return response, nil
 }

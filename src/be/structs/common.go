@@ -58,6 +58,20 @@ type OpenProjectResult struct {
 	ErrMsg string `json:"errMsg"`
 }
 
+type ProjectUri struct {
+	// 目录/文件
+	Type string `json:"type"`
+	// 目录或文件名
+	Name string `json:"name"`
+	// 目录的话下层相关信息
+	SubDirs []*ProjectUri `json:"subDirs"`
+}
+
+// 项目的目录信息
+type ProjectCatalog struct {
+	Catalog []*ProjectUri `json:"catalog"`
+}
+
 // ActionResult 用户采取动作后的返回信息
 type ActionResult struct {
 }

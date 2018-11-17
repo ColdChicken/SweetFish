@@ -2,6 +2,7 @@ package service
 
 import (
 	"be/common"
+	xe "be/common/error"
 	"be/common/log"
 	"be/dao"
 	"be/structs"
@@ -142,6 +143,29 @@ func (p *Project) setService(service *Service) {
 		p.service = nil
 	}
 	p.service = service
+}
+
+// ListCatalog 列出项目目录
+func (p *Project) ListCatalog() (*structs.ProjectCatalog, error) {
+	if p.Status != "正常" {
+		return nil, xe.New("项目状态不处于 正常 状态")
+	}
+
+	if p.service == nil {
+		return nil, xe.New("service不存在")
+	}
+
+	return p.service.ListCatalog()
+}
+
+// Close 关闭项目
+func (p *Project) Close() {
+	if p.Status != "正常" {
+		log.Errorf("%d 的状态不为 正常，不能关闭", p.Id)
+	}
+	if p.service != nil {
+		p.service.Remove()
+	}
 }
 
 // Open 打开项目

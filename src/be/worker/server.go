@@ -19,4 +19,6 @@ func InitHandle(r *server.WWWMux) {
 	r.RegistURLMapping("/v1/worker/init", "POST", apiInit)
 	// 打开项目
 	r.RegistURLMapping("/v1/worker/open", "POST", apiOpenProject)
+	// 列出目录
+	r.RegistURLMapping("/v1/worker/listcatalog", "POST", apiListCatalog)
 }
