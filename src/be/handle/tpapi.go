@@ -248,6 +248,56 @@ func tpapiListProjectCatalog(res http.ResponseWriter, req *http.Request) {
 	common.ResMsg(res, 200, string(b))
 }
 
+func tpapiActionOpenFile(res http.ResponseWriter, req *http.Request) {
+	requestUser, err := tpapiGetRequestUser(req)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"err": err.Error(),
+		}).Error("获取用户信息失败")
+		common.ResMsg(res, 400, xe.AuthError().Error())
+		return
+	}
+
+	reqContent, err := ioutil.ReadAll(req.Body)
+	defer req.Body.Close()
+	if err != nil {
+		log.WithFields(log.Fields{}).Error("请求报文解析失败")
+		common.ResInvalidRequestBody(res)
+		return
+	}
+
+	type Request struct {
+		ProjectId int64 `json:"projectId"`
+		FilePath string `json:"filePath"`
+		FileName string `json:"fileName"`
+	}
+
+	request := &Request{}
+	if err := common.ParseJsonStr(string(reqContent), request); err != nil {
+		log.Errorln("解析模板JSON失败")
+		common.ResMsg(res, 400, xe.HandleRequestError().Error())
+		return
+	}
+
+	result, err := model.Project.ActionOpenFile(requestUser, request.ProjectId, request.FilePath, request.FileName)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"err": err.Error(),
+		}).Error("model请求处理失败")
+		common.ResMsg(res, 400, xe.HandleRequestError().Error())
+		return
+	}
+	b, err := json.Marshal(result)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"err": err.Error(),
+		}).Error("JSON生成失败")
+		common.ResMsg(res, 400, xe.HandleRequestError().Error())
+		return
+	}
+	common.ResMsg(res, 200, string(b))
+}
+
 func tpapiOpenProject(res http.ResponseWriter, req *http.Request) {
 	requestUser, err := tpapiGetRequestUser(req)
 	if err != nil {
@@ -278,56 +328,6 @@ func tpapiOpenProject(res http.ResponseWriter, req *http.Request) {
 	}
 
 	result, err := model.Project.OpenProject(requestUser, request.ProjectId)
-	if err != nil {
-		log.WithFields(log.Fields{
-			"err": err.Error(),
-		}).Error("model请求处理失败")
-		common.ResMsg(res, 400, xe.HandleRequestError().Error())
-		return
-	}
-	b, err := json.Marshal(result)
-	if err != nil {
-		log.WithFields(log.Fields{
-			"err": err.Error(),
-		}).Error("JSON生成失败")
-		common.ResMsg(res, 400, xe.HandleRequestError().Error())
-		return
-	}
-	common.ResMsg(res, 200, string(b))
-}
-
-func tpapiDoActionInProject(res http.ResponseWriter, req *http.Request) {
-	requestUser, err := tpapiGetRequestUser(req)
-	if err != nil {
-		log.WithFields(log.Fields{
-			"err": err.Error(),
-		}).Error("获取用户信息失败")
-		common.ResMsg(res, 400, xe.AuthError().Error())
-		return
-	}
-
-	reqContent, err := ioutil.ReadAll(req.Body)
-	defer req.Body.Close()
-	if err != nil {
-		log.WithFields(log.Fields{}).Error("请求报文解析失败")
-		common.ResInvalidRequestBody(res)
-		return
-	}
-
-	type Request struct {
-		ProjectId  int64  `json:"projectId"`
-		Action     string `json:"action"`
-		ActionInfo string `json:"actionInfo"`
-	}
-
-	request := &Request{}
-	if err := common.ParseJsonStr(string(reqContent), request); err != nil {
-		log.Errorln("解析模板JSON失败")
-		common.ResMsg(res, 400, xe.HandleRequestError().Error())
-		return
-	}
-
-	result, err := model.Project.DoActionInProject(requestUser, request.ProjectId, request.Action, request.ActionInfo)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"err": err.Error(),

@@ -82,7 +82,7 @@ func (o *WWWOptions) InitOptions() {
 	flag.StringVar(&o.ServiceHTTPAddress, "service_http_address", "127.0.0.1", "Service HTTP Address")
 	flag.Uint64Var(&o.ServiceHTTPPort, "service_http_port", 19512, "Service HTTP Port")
 	flag.StringVar(&o.CodesRootPath, "codes_root_path", "D:\\logs", "CodesRootPath")
-	flag.Int64Var(&o.CodeFetchTimeout, "code_fetch_timeout", 600, "CodeFetchTimeout")
+	flag.Int64Var(&o.CodeFetchTimeout, "code_fetch_timeout", 900, "CodeFetchTimeout")
 
 	iniflags.Parse()
 }

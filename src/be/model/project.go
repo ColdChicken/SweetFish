@@ -82,12 +82,6 @@ func (m *ProjectMgr) ListProjectCatalog(requestUser *structs.UserInfo, projectId
 	return project.ListCatalog()
 }
 
-// DoActionInProject 用户在项目中进行某种操作
-// action表示用户进行的操作，根据操作的不同actionRawInfo中会包含不同的信息
-func (m *ProjectMgr) DoActionInProject(requestUser *structs.UserInfo, projectId int64, action string, actionRawInfo string) (*structs.ActionResult, error) {
-	return nil, nil
-}
-
 // CloseProject 用户关闭某个已经打开的项目
 // 关闭项目会根据实际情况决定是否关闭后台服务
 func (m *ProjectMgr) CloseProject(requestUser *structs.UserInfo, projectId int64) {
@@ -101,5 +95,27 @@ func (m *ProjectMgr) CloseProject(requestUser *structs.UserInfo, projectId int64
 
 // DeleteProject 删除项目
 func (m *ProjectMgr) DeleteProject(requestUser *structs.UserInfo, projectId int64) error {
+	project, err := m.projectMgr.GetProjectByUserAndProjectId(requestUser.Username, projectId)
+	if err != nil {
+		log.Errorln(err.Error())
+		return err
+	}
+
+	// 解除绑定关系
+	m.projectMgr.UnbindUserAndProject(requestUser.Username, projectId)
+
+	// 停止service
+	go project.Remove()
+
 	return nil
+}
+
+// ActionOpenFile 打开某个文件
+func (m *ProjectMgr) ActionOpenFile(requestUser *structs.UserInfo, projectId int64, filePath string, fileName string) (*structs.OpenFileResult, error) {
+	project, err := m.projectMgr.GetProjectByUserAndProjectId(requestUser.Username, projectId)
+	if err != nil {
+		log.Errorln(err.Error())
+		return nil, err
+	}
+	return project.OpenFile(filePath, fileName)
 }

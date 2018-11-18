@@ -62,6 +62,26 @@ func (m *ProjectMgr) InitProjectsFromDB() {
 	}
 }
 
+func (m *ProjectMgr) UnbindUserAndProject(username string, projectId int64) {
+	err := m.projectDao.UnbindUserAndProject(projectId, username)
+	if err != nil {
+		log.Errorln(err.Error())
+		return
+	}
+
+	m.projectsLock.Lock()
+	if projects, ok := m.projects[username]; ok == true {
+		newProjects := []*Project{}
+		for _, project := range projects {
+			if project.Id != projectId {
+				newProjects = append(newProjects, project)
+			}
+		}
+		m.projects[username] = newProjects
+	}
+	m.projectsLock.Unlock()
+}
+
 func (m *ProjectMgr) GetProjectByUserAndProjectId(username string, projectId int64) (*Project, error) {
 	m.projectsLock.Lock()
 	if projects, ok := m.projects[username]; ok == true {

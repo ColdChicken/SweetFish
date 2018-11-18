@@ -378,3 +378,65 @@ func (s *Service) Remove() error {
 		return nil
 	}
 }
+
+// OpenFile 打开文件
+func (s *Service) OpenFile(filePath string, fileName string) (*structs.OpenFileResult, error) {
+	requestUrl := fmt.Sprintf("%s/v1/worker/action/openfile", s.workerMachine.getServiceAddress())
+
+	request := &structs.WorkerActionOpenFileRequest{
+		ServiceId: s.id,
+		FilePath:  filePath,
+		FileName:  fileName,
+	}
+
+	hc := &http.Client{}
+
+	b, err := json.Marshal(request)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"err": err.Error(),
+		}).Error("生成JSON串失败")
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", requestUrl, bytes.NewBuffer(b))
+	if err != nil {
+		log.WithFields(log.Fields{
+			"url": requestUrl,
+			"err": err.Error(),
+		}).Error("构造请求失败")
+		return nil, err
+	}
+
+	resp, err := hc.Do(req)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"url": requestUrl,
+			"err": err.Error(),
+		}).Error("发送请求失败")
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+	respContent, _ := ioutil.ReadAll(resp.Body)
+
+	if resp.StatusCode != 200 {
+		log.WithFields(log.Fields{
+			"url": requestUrl,
+			"msg": string(respContent),
+		}).Error("请求对端处理失败")
+		return nil, xe.New("请求对端处理失败")
+	} else {
+		response := &structs.WorkerActionOpenFileResponse{}
+		if err := common.ParseJsonStr(string(respContent), response); err != nil {
+			log.WithFields(log.Fields{
+				"url":    requestUrl,
+				"result": string(respContent),
+				"err":    err.Error(),
+			}).Error("解析模板JSON失败")
+			return nil, xe.New("解析模板JSON失败")
+		} else {
+			return response.OpenFileResult, nil
+		}
+	}
+}

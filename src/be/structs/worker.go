@@ -47,3 +47,13 @@ type WorkerListCatalogRequest struct {
 type WorkerListCatalogResponse struct {
 	ProjectCatalog *ProjectCatalog `json:"catalog"`
 }
+
+type WorkerActionOpenFileRequest struct {
+	ServiceId string `json:"serviceId"`
+	FilePath string `json:"filePath"`
+	FileName string `json:"fileName"`
+}
+
+type WorkerActionOpenFileResponse struct {
+	OpenFileResult *OpenFileResult `json:"openFileResult"`
+}

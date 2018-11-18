@@ -72,6 +72,8 @@ type ProjectCatalog struct {
 	Catalog []*ProjectUri `json:"catalog"`
 }
 
-// ActionResult 用户采取动作后的返回信息
-type ActionResult struct {
+// 打开文件返回信息
+type OpenFileResult struct {
+	Name       string `json:"name"`
+	RawContent string `json:"rawContent"`
 }

@@ -140,6 +140,32 @@ func (d *ProjectDao) CreateProject(fullName string, sourceCodeIp string) (int64,
 	return projectId, nil
 }
 
+func (d *ProjectDao) UnbindUserAndProject(projectId int64, username string) error {
+	tx := mysql.DB.GetTx()
+	sql := "DELETE FROM USER_PROJECT WHERE username=? AND projectId=?"
+	stmt, err := tx.Prepare(sql)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"sql": sql,
+			"err": err.Error(),
+		}).Error("prepare错误")
+		tx.Rollback()
+		return err
+	}
+	_, err = stmt.Exec(username, projectId)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"err": err.Error(),
+		}).Error("query错误")
+		stmt.Close()
+		tx.Rollback()
+		return err
+	}
+	stmt.Close()
+	tx.Commit()
+	return nil
+}
+
 func (d *ProjectDao) BindUserAndProject(projectId int64, username string) error {
 	tx := mysql.DB.GetTx()
 	sql := "INSERT INTO USER_PROJECT (username, projectId) VALUES(?, ?)"

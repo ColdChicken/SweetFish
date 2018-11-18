@@ -130,6 +130,7 @@ func (p *Project) syncLangTypes() error {
 }
 
 func (p *Project) updateStatus(status string) error {
+	p.Status = status
 	err := p.projectDao.UpdateStatus(p.Id, status)
 	if err != nil {
 		log.Errorf(err.Error())
@@ -163,6 +164,14 @@ func (p *Project) Close() {
 	if p.Status != "正常" {
 		log.Errorf("%d 的状态不为 正常，不能关闭", p.Id)
 	}
+	if p.service != nil {
+		p.service.Remove()
+	}
+}
+
+// Remove 删除项目
+// todo 这里删除项目的逻辑存在问题，代码不会被真正删除
+func (p *Project) Remove() {
 	if p.service != nil {
 		p.service.Remove()
 	}
@@ -207,4 +216,16 @@ func (p *Project) Open() (*structs.OpenProjectResult, error) {
 	p.updateStatus("正常")
 	result.Result = "成功"
 	return result, nil
+}
+
+func (p *Project) OpenFile(filePath string, fileName string) (*structs.OpenFileResult, error) {
+	if p.Status != "正常" {
+		return nil, xe.New("项目状态不处于 正常 状态")
+	}
+
+	if p.service == nil {
+		return nil, xe.New("service不存在")
+	}
+
+	return p.service.OpenFile(filePath, fileName)
 }

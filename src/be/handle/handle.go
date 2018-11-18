@@ -59,10 +59,12 @@ func initTPAPIMapping(r *server.WWWMux) {
 	r.RegistURLMapping("/v1/tp/project/open", "POST", tpapiOpenProject)
 	// 加载项目目录
 	r.RegistURLMapping("/v1/tp/project/listcatalog", "POST", tpapiListProjectCatalog)
-	// 用户在项目中执行某个操作
-	r.RegistURLMapping("/v1/tp/project/action", "POST", tpapiDoActionInProject)
 	// 用户关闭某个项目
 	r.RegistURLMapping("/v1/tp/project/close", "POST", tpapiCloseProject)
 	// 用户删除某个项目
 	r.RegistURLMapping("/v1/tp/project/delete", "POST", tpapiDeleteProject)
+
+	// ACTION
+	// 用户打开某个文件
+	r.RegistURLMapping("/v1/tp/project/action/openfile", "POST", tpapiActionOpenFile)
 }

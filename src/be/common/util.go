@@ -4,6 +4,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"strings"
 )
 
 func StringInSlice(s string, ss []string) bool {
@@ -64,4 +65,28 @@ func GetDirAllFiles(dir string) ([]string, error) {
 	}
 
 	return files, nil
+}
+
+func PathContainRelativeInfo(dir string) bool {
+	parts := strings.Split(dir, string(os.PathSeparator))
+	for _, part := range parts {
+		if part == ".." {
+			return true
+		}
+	}
+	return false
+}
+
+func GetFileContent(f string) (string, error) {
+	fi, err := os.Open(f)
+	if err != nil {
+		return "", err
+	}
+	defer fi.Close()
+	fd, err := ioutil.ReadAll(fi)
+	if err != nil {
+		return "", err
+	}
+	content := string(fd)
+	return content, nil
 }

@@ -30,6 +30,7 @@ func AccessLogHandler(h func(http.ResponseWriter, *http.Request)) func(http.Resp
 	return func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
 			if err := recover(); err != nil {
+				log.Errorln(err)
 				log.Errorf("HTTP Handler异常，stack信息 %s", debug.Stack())
 				common.ResMsg(w, 500, xe.HandleRequestError().Error())
 				return

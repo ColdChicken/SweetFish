@@ -6,9 +6,13 @@ import (
 )
 
 type File struct {
+	Name string
+	RawContent string
 }
 
 type FilePath struct {
+	Path string
+	Name string
 }
 
 type Position struct {
@@ -19,7 +23,7 @@ type LangWorker interface {
 	Init(pm *process.ProcessMgr, codePath string, projectFullName string, rawConfig string)
 
 	// 动作: 打开文件，这里File可以包含语法高亮信息
-	OpenFile(p *FilePath) *File
+	OpenFile(p *FilePath) (*File, error)
 
 	// 动作: 跳转到定义
 	GoToDefinition(p *Position) []*Position

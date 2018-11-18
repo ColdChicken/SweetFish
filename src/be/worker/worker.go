@@ -266,3 +266,56 @@ func (w *Worker) ListCatalog() (*structs.WorkerListCatalogResponse, error) {
 	response.ProjectCatalog = catalog
 	return response, nil
 }
+
+func (w *Worker) getLangWorkerByFileName(fileName string) (lang_worker.LangWorker, error) {
+	langType := common.GetLangTypeByFileName(fileName)
+	w.lock.Lock()
+	if wl, ok := w.langWorkers[langType]; ok == true {
+		w.lock.Unlock()
+		return wl, nil
+	} else {
+		w.lock.Unlock()
+		return nil, xe.New("不存在对应的LangWorker")
+	}
+}
+
+// OpenFile 打开文件
+func (w *Worker) OpenFile(filePath string, fileName string) (*structs.WorkerActionOpenFileResponse, error) {
+	response := &structs.WorkerActionOpenFileResponse{
+		OpenFileResult: &structs.OpenFileResult{},
+	}
+	// 判断状态
+	if w.Inited() == false {
+		return nil, xe.New("worker当前状态无法处理该请求")
+	}
+
+	// 处理filePath
+	filePathParts := strings.Split(filePath, "/")
+	filePath = path.Join(filePathParts...)
+
+	// 判断路径是否包含相对路径
+	targetFile := path.Join(w.codePath, filePath, fileName)
+	if common.PathContainRelativeInfo(targetFile) {
+		return nil, xe.New("请求地址无效或无授权")
+	}
+
+	// 获取langWorker
+	lw, err := w.getLangWorkerByFileName(fileName)
+	if err != nil {
+		log.Errorln(err.Error())
+		return nil, err
+	}
+
+	fp := &lang_worker.FilePath{Path: filePath, Name: fileName}
+	fileInfo, err := lw.OpenFile(fp)
+	if err != nil {
+		log.Errorln(err.Error())
+		return nil, err
+	}
+	log.Errorln("XXX")
+
+	response.OpenFileResult.Name = fileName
+	response.OpenFileResult.RawContent = fileInfo.RawContent
+
+	return response, nil
+}
