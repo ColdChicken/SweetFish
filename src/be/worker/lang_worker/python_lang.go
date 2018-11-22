@@ -8,22 +8,22 @@ import (
 	"path"
 )
 
-type PlainTextLangWorker struct {
+type PythonLangWorker struct {
 	pm              *process.ProcessMgr
 	codePath        string
 	projectFullName string
 	rawConfig       string
 }
 
-func (w *PlainTextLangWorker) Init(pm *process.ProcessMgr, codePath string, projectFullName string, rawConfig string) {
+func (w *PythonLangWorker) Init(pm *process.ProcessMgr, codePath string, projectFullName string, rawConfig string) {
 	w.pm = pm
 	w.codePath = codePath
 	w.projectFullName = projectFullName
 	w.rawConfig = rawConfig
 }
 
-func (w *PlainTextLangWorker) OpenFile(p *FilePath) (*File, error) {
-	result := &File{Tokens: nil, RawContent: ""}
+func (w *PythonLangWorker) OpenFile(p *FilePath) (*File, error) {
+	result := &File{}
 	result.Name = p.Name
 
 	targetFile := path.Join(w.codePath, p.Path, p.Name)
@@ -44,18 +44,18 @@ func (w *PlainTextLangWorker) OpenFile(p *FilePath) (*File, error) {
 	return result, nil
 }
 
-func (w *PlainTextLangWorker) GoToDefinition(p *Position) []*Position {
+func (w *PythonLangWorker) GoToDefinition(p *Position) []*Position {
 	return nil
 }
 
-func (w *PlainTextLangWorker) GoToTypeDefition(p *Position) []*Position {
+func (w *PythonLangWorker) GoToTypeDefition(p *Position) []*Position {
 	return nil
 }
 
-func (w *PlainTextLangWorker) GoToImplementation(p *Position) []*Position {
+func (w *PythonLangWorker) GoToImplementation(p *Position) []*Position {
 	return nil
 }
 
-func (w *PlainTextLangWorker) Close() {
+func (w *PythonLangWorker) Close() {
 
 }

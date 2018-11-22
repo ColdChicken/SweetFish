@@ -56,6 +56,9 @@ type WWWOptions struct {
 
 	// 下载源码超时时间
 	CodeFetchTimeout int64
+
+	// pygments helper路径
+	PygmentsHelperPath string
 }
 
 var Options WWWOptions
@@ -83,6 +86,7 @@ func (o *WWWOptions) InitOptions() {
 	flag.Uint64Var(&o.ServiceHTTPPort, "service_http_port", 19512, "Service HTTP Port")
 	flag.StringVar(&o.CodesRootPath, "codes_root_path", "D:\\logs", "CodesRootPath")
 	flag.Int64Var(&o.CodeFetchTimeout, "code_fetch_timeout", 900, "CodeFetchTimeout")
+	flag.StringVar(&o.PygmentsHelperPath, "pygments_helper_path", "D:\\SweetFishProject\\SweetFish\\bin\\pygments_helper.py", "PygmentsHelperPath")
 
 	iniflags.Parse()
 }

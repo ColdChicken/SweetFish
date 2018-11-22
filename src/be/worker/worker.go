@@ -312,10 +312,10 @@ func (w *Worker) OpenFile(filePath string, fileName string) (*structs.WorkerActi
 		log.Errorln(err.Error())
 		return nil, err
 	}
-	log.Errorln("XXX")
 
 	response.OpenFileResult.Name = fileName
 	response.OpenFileResult.RawContent = fileInfo.RawContent
+	response.OpenFileResult.Lines = fileInfo.Tokens.Tokens
 
 	return response, nil
 }

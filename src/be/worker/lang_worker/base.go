@@ -2,12 +2,14 @@ package lang_worker
 
 import (
 	"be/common"
+	"be/lex"
 	"be/worker/process"
 )
 
 type File struct {
-	Name string
+	Name       string
 	RawContent string
+	Tokens     *lex.FileTokensInfo
 }
 
 type FilePath struct {
@@ -40,6 +42,8 @@ type LangWorker interface {
 
 func GetLangWorkerByLangType(langType common.LangType) LangWorker {
 	switch langType {
+	case common.Python:
+		return &PythonLangWorker{}
 	case common.PlainText:
 		return &PlainTextLangWorker{}
 	default:

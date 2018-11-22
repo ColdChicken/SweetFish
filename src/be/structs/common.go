@@ -1,5 +1,9 @@
 package structs
 
+import (
+	"be/lex"
+)
+
 // UserInfo 用户信息，这个结构体用于管理控制台使用
 type UserInfo struct {
 	Username string `json:"username"`
@@ -74,6 +78,7 @@ type ProjectCatalog struct {
 
 // 打开文件返回信息
 type OpenFileResult struct {
-	Name       string `json:"name"`
-	RawContent string `json:"rawContent"`
+	Name       string              `json:"name"`
+	RawContent string              `json:"rawContent"`
+	Lines     [][]*lex.Token `json:"lines"`
 }

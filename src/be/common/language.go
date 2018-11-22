@@ -7,10 +7,14 @@ type LangType int64
 const (
 	// 无格式文件
 	PlainText LangType = iota
+	// Python
+	Python
 )
 
 // 映射关系，key为LangType，value为对应的文件后缀
-var LangTypeMapping = map[LangType][]string{}
+var LangTypeMapping = map[LangType][]string{
+	Python: []string{"py"},
+}
 
 func GetLangTypeByFileName(fileName string) LangType {
 	fileName = strings.ToUpper(strings.TrimSpace(fileName))

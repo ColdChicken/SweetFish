@@ -16,6 +16,8 @@ be:
 
 nimo:
 	go install be/cmd/nimo
+	rm -f bin/pygments_helper.py
+	cp src/be/lex/pygments_helper.py bin/pygments_helper.py
 
 webpack:
 	cd src/fe && npm run build
