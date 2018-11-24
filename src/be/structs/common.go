@@ -78,7 +78,6 @@ type ProjectCatalog struct {
 
 // 打开文件返回信息
 type OpenFileResult struct {
-	Name       string              `json:"name"`
-	RawContent string              `json:"rawContent"`
-	Lines     [][]*lex.Token `json:"lines"`
+	Name  string         `json:"name"`
+	Lines [][]*lex.Token `json:"lines"`
 }

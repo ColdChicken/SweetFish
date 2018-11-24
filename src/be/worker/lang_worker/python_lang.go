@@ -1,7 +1,6 @@
 package lang_worker
 
 import (
-	"be/common"
 	"be/common/log"
 	"be/lex"
 	"be/worker/process"
@@ -31,12 +30,7 @@ func (w *PythonLangWorker) OpenFile(p *FilePath) (*File, error) {
 	tokens, err := lex.PygmentsLex(targetFile)
 	if err != nil {
 		log.Errorf("lex失败 %s: %s", targetFile, err.Error())
-		// 如果失败则获取文件原始内容
-		rawContent, err := common.GetFileContent(targetFile)
-		if err != nil {
-			return nil, err
-		}
-		result.RawContent = rawContent
+		return nil, err
 	} else {
 		result.Tokens = tokens
 	}
