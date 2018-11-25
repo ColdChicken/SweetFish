@@ -31,6 +31,12 @@ func NewProjectMgr(serviceMgr *ServiceMgr) *ProjectMgr {
 
 // InitProjectsFromDB 从DB中初始化项目信息。此方法必须在使用此model前调用
 func (m *ProjectMgr) InitProjectsFromDB() {
+	// 状态不为正常的统一重置为失败，用户会的删除重建项目
+	err := m.projectDao.InvalidNoOkProjects()
+	if err != nil {
+		log.Errorf("状态不为正常的统一重置为失败动作失败 %s", err.Error())
+		panic(fmt.Sprintf("状态不为正常的统一重置为失败动作失败 %s", err.Error()))
+	}
 	// 加载project
 	projectsInDB, err := m.projectDao.SyncAllProjectsForInitial()
 	if err != nil {
@@ -40,11 +46,6 @@ func (m *ProjectMgr) InitProjectsFromDB() {
 	for _, projectInDB := range projectsInDB {
 		if _, ok := m.projects[projectInDB.Username]; ok == false {
 			m.projects[projectInDB.Username] = []*Project{}
-		}
-
-		// 状态不为正常的统一重置为失败，用户会的删除重建项目
-		if projectInDB.Status != "正常" {
-			projectInDB.Status = "失败"
 		}
 
 		langTypes := []common.LangType{}

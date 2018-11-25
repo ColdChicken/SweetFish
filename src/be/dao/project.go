@@ -10,6 +10,32 @@ import (
 type ProjectDao struct {
 }
 
+func (d *ProjectDao) InvalidNoOkProjects() error {
+	tx := mysql.DB.GetTx()
+	sql := "UPDATE PROJECT SET status='失败' WHERE status != '正常'"
+	stmt, err := tx.Prepare(sql)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"sql": sql,
+			"err": err.Error(),
+		}).Error("prepare错误")
+		tx.Rollback()
+		return err
+	}
+	_, err = stmt.Exec()
+	if err != nil {
+		log.WithFields(log.Fields{
+			"err": err.Error(),
+		}).Error("query错误")
+		stmt.Close()
+		tx.Rollback()
+		return err
+	}
+	stmt.Close()
+	tx.Commit()
+	return nil
+}
+
 func (d *ProjectDao) SyncAllProjectsForInitial() ([]*structs.ProjectInfo, error) {
 	projects := []*structs.ProjectInfo{}
 
