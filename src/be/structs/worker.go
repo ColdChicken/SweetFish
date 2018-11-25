@@ -50,10 +50,14 @@ type WorkerListCatalogResponse struct {
 
 type WorkerActionOpenFileRequest struct {
 	ServiceId string `json:"serviceId"`
-	FilePath string `json:"filePath"`
-	FileName string `json:"fileName"`
+	FilePath  string `json:"filePath"`
+	FileName  string `json:"fileName"`
 }
 
 type WorkerActionOpenFileResponse struct {
 	OpenFileResult *OpenFileResult `json:"openFileResult"`
+}
+
+type WorkerRemoveDirsRequest struct {
+	ServiceId string `json:"serviceId"`
 }

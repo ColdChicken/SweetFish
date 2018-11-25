@@ -45,6 +45,7 @@ func (m *WorkerMgr) GetWorkerByServiceId(serviceId string) (*Worker, error) {
 	}
 }
 
+// RemoveWorker 移除worker
 func (m *WorkerMgr) RemoveWorker(worker *Worker) {
 	m.workersLock.Lock()
 	tw, ok := m.workers[worker.serviceId]

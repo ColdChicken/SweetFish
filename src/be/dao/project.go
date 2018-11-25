@@ -36,6 +36,53 @@ func (d *ProjectDao) InvalidNoOkProjects() error {
 	return nil
 }
 
+func (d *ProjectDao) ListProjectsUnbinded() ([]*structs.ProjectInfo, error) {
+	projects := []*structs.ProjectInfo{}
+
+	tx := mysql.DB.GetTx()
+	sql := "select PROJECT.id, PROJECT.fullName, PROJECT.status, PROJECT.config, PROJECT.sourceCodeIp, PROJECT.langTypes from project where project.status != '已删除' and project.id not in (select distinct user_project.projectId from user_project)"
+	stmt, err := tx.Prepare(sql)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"sql": sql,
+			"err": err.Error(),
+		}).Error("prepare错误")
+		tx.Rollback()
+		return projects, xe.DBError()
+	}
+
+	rows, err := stmt.Query()
+	if err != nil {
+		log.WithFields(log.Fields{
+			"sql": sql,
+			"err": err.Error(),
+		}).Error("Query错误")
+		stmt.Close()
+		tx.Rollback()
+		return projects, xe.DBError()
+	}
+
+	for rows.Next() {
+		project := &structs.ProjectInfo{}
+		err := rows.Scan(&project.Id, &project.FullName, &project.Status, &project.Config, &project.SourceCodeIp, &project.LangTypesStr)
+		if err != nil {
+			log.WithFields(log.Fields{
+				"err": err.Error(),
+			}).Error("rows.Next错误")
+			rows.Close()
+			stmt.Close()
+			tx.Rollback()
+			return projects, xe.DBError()
+		}
+		projects = append(projects, project)
+	}
+	rows.Close()
+	stmt.Close()
+	tx.Commit()
+
+	return projects, nil
+}
+
 func (d *ProjectDao) SyncAllProjectsForInitial() ([]*structs.ProjectInfo, error) {
 	projects := []*structs.ProjectInfo{}
 

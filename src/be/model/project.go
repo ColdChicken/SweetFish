@@ -1,11 +1,13 @@
 package model
 
 import (
+	"be/common"
 	xe "be/common/error"
 	"be/common/log"
 	"be/dao"
 	"be/service"
 	"be/structs"
+	"time"
 )
 
 type ProjectMgr struct {
@@ -28,6 +30,34 @@ func init() {
 
 func (m *ProjectMgr) InitProjects() {
 	m.projectMgr.InitProjectsFromDB()
+}
+
+func (m *ProjectMgr) RunService() {
+	go m.removeUnusedProjectService()
+}
+
+func (m *ProjectMgr) removeUnusedProjectService() {
+	for {
+		log.Infoln("removeUnusedProjectService running")
+
+		// 列出所有没有用户关联的项目
+		projects, err := m.projectDao.ListProjectsUnbinded()
+		if err != nil {
+			log.Errorf("removeUnusedProjectService err: %s", err.Error())
+		} else {
+			for _, project := range projects {
+				log.Infof("removeUnusedProjectService 开始清理 %d", project.Id)
+				targetProject := service.NewProject(project.Id, "", project.FullName, project.SourceCodeIp, project.Config, project.Status, m.projectMgr, m.serviceMgr, []common.LangType{})
+				err := targetProject.RemoveDirs()
+				if err != nil {
+					log.Errorf("清理 %d 的目录信息失败 %s", project.Id, err.Error())
+				}
+			}
+		}
+
+		// 每两小时运行一次
+		time.Sleep(2 * time.Hour)
+	}
 }
 
 func (m *ProjectMgr) userQuotaCheck(requestUser *structs.UserInfo) (bool, error) {

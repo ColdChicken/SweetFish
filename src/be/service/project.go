@@ -229,3 +229,23 @@ func (p *Project) OpenFile(filePath string, fileName string) (*structs.OpenFileR
 
 	return p.service.OpenFile(filePath, fileName)
 }
+
+func (p *Project) RemoveDirs() error {
+	if p.service != nil {
+		return xe.New("RemoveDirs 只能一次性使用")
+	}
+	service, err := p.serviceMgr.CreateService(p.SourceCodeIp, p)
+	if err != nil {
+		return err
+	}
+
+	err = service.RemoveDirs()
+	if err != nil {
+		return err
+	}
+
+	service.Remove()
+
+	p.updateStatus("已删除")
+	return nil
+}

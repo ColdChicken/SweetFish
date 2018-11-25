@@ -10,6 +10,7 @@ import (
 	"be/worker/process"
 	"fmt"
 	"io/ioutil"
+	"os"
 	"path"
 	"strings"
 	"sync"
@@ -80,6 +81,11 @@ func (w *Worker) die() {
 
 	// 移除此worker
 	w.mgr.RemoveWorker(w)
+}
+
+// RemoveDirs 删除所有关联的目录
+func (w *Worker) RemoveDirs() error {
+	return os.RemoveAll(w.codePath)
 }
 
 // FetchCodes 下载源码

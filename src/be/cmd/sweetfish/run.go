@@ -30,6 +30,8 @@ func doServe() {
 	mysql.DB.InitConn()
 	// 初始化项目信息
 	model.Project.InitProjects()
+	// 启动后端服务
+	model.Project.RunService()
 	// 初始化服务,并启动服务
 	mux := server.New()
 	// URL映射
