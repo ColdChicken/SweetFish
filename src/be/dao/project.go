@@ -40,7 +40,7 @@ func (d *ProjectDao) ListProjectsUnbinded() ([]*structs.ProjectInfo, error) {
 	projects := []*structs.ProjectInfo{}
 
 	tx := mysql.DB.GetTx()
-	sql := "select PROJECT.id, PROJECT.fullName, PROJECT.status, PROJECT.config, PROJECT.sourceCodeIp, PROJECT.langTypes from project where project.status != '已删除' and project.id not in (select distinct user_project.projectId from user_project)"
+	sql := "select PROJECT.id, PROJECT.fullName, PROJECT.status, PROJECT.config, PROJECT.sourceCodeIp, PROJECT.langTypes from PROJECT where PROJECT.status != '已删除' and PROJECT.id not in (select distinct USER_PROJECT.projectId from USER_PROJECT)"
 	stmt, err := tx.Prepare(sql)
 	if err != nil {
 		log.WithFields(log.Fields{

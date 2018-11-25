@@ -2,6 +2,7 @@
 
 import json
 import sys
+from io import open
 
 import pygments
 import pygments.lexers

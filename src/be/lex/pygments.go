@@ -2,7 +2,6 @@ package lex
 
 import (
 	"be/common"
-	"be/common/log"
 	"be/options"
 	"strings"
 )
@@ -104,7 +103,6 @@ func getTokenType(types []string) string {
 	if target, ok := tokenMap[strings.Join(types, ".")]; ok {
 		return target
 	} else {
-		log.Warnf("token类型不存在缩写信息 %s", strings.Join(types, "."))
 		if len(types) != 1 {
 			return getTokenType(types[0 : len(types)-1])
 		} else {
