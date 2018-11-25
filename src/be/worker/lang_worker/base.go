@@ -42,6 +42,8 @@ type LangWorker interface {
 
 func GetLangWorkerByLangType(langType common.LangType) LangWorker {
 	switch langType {
+	case common.Go:
+		return &GoLangWorker{}
 	case common.Python:
 		return &PythonLangWorker{}
 	case common.PlainText:

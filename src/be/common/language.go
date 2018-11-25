@@ -9,11 +9,14 @@ const (
 	PlainText LangType = iota
 	// Python
 	Python
+	// Go
+	Go
 )
 
 // 映射关系，key为LangType，value为对应的文件后缀
 var LangTypeMapping = map[LangType][]string{
 	Python: []string{"py"},
+	Go: []string{"go"},
 }
 
 func GetLangTypeByFileName(fileName string) LangType {
