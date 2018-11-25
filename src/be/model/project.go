@@ -1,6 +1,7 @@
 package model
 
 import (
+	xe "be/common/error"
 	"be/common/log"
 	"be/dao"
 	"be/service"
@@ -29,10 +30,33 @@ func (m *ProjectMgr) InitProjects() {
 	m.projectMgr.InitProjectsFromDB()
 }
 
+func (m *ProjectMgr) userQuotaCheck(requestUser *structs.UserInfo) (bool, error) {
+	userProjects, err := m.ListProjects(requestUser)
+	if err != nil {
+		log.Errorln(err.Error())
+		return false, err
+	}
+	// 目前一个用户只允许创建3个项目
+	if len(userProjects) > 3 {
+		return false, nil
+	}
+	return true, nil
+}
+
 // CreateProject 创建项目
 // 此方法调用后会立刻返回
 func (m *ProjectMgr) CreateProject(requestUser *structs.UserInfo, projectId string) error {
 	log.Debugf("开始创建项目 %s - %s", requestUser.Username, projectId)
+	// 判断用户是否还可以创建项目
+	quotaCheck, err := m.userQuotaCheck(requestUser)
+	if err != nil {
+		log.Errorln(err.Error())
+		return err
+	}
+	if quotaCheck == false {
+		return xe.New("当前用户添加的项目已超过上限")
+	}
+
 	// 获取目标主机
 	targetIp, err := m.serviceMgr.ChooseTargetServiceMachine()
 	if err != nil {
